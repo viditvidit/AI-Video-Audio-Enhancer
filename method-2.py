@@ -7,16 +7,12 @@ from pydub import AudioSegment
 import requests  # For API calls
 import tempfile
 
-#Initialize Google Cloud clients
-speech_client = speech.SpeechClient()
-tts_client = texttospeech.TextToSpeechClient()
-
-
-def correct_text(transcription):
+# Function to correct text using GPT-4o API
+def correct_text(transcription, api_key):
     url = "https://internshala.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview"
     headers = {
         "Content-Type": "application/json",
-        "api-key": "22ec84421ec24230a3638d1b51e3a7dc"  # Replace with your API key
+        "api-key": api_key  # Use the API key from user input
     }
     payload = {
         "messages": [
@@ -29,7 +25,7 @@ def correct_text(transcription):
     if response.status_code == 200:
         return response.json()["choices"][0]["message"]["content"]
     else:
-        streamlit.error("Error in GPT-4o API requestreamlit.")
+        streamlit.error("Error in GPT-4o API request.")
         return transcription  # Return original transcription if error
 
 
@@ -94,85 +90,108 @@ def replace_audio(original_video_file, new_audio):
 
     return output_file
 
-# Streamlit UI
+
+# Streamlit UI for uploading Google Cloud credentials
 streamlit.title("Video Audio Enhancement with AI")
-streamlit.subheader("This approach adjusts audio by syncing sentences by using markers")
+streamlit.subheader("This approach adjusts audio by syncing sentences using markers")
 streamlit.caption("Created by Vidit Kharecha")
 
+# Step 1: Upload Google Cloud credentials
+uploaded_credentials = streamlit.file_uploader("Upload Google Cloud JSON Credentials", type=["json"])
 
-uploaded_video = streamlit.file_uploader("Upload Video", type=["mp4", "mov"])
-if uploaded_video:
-    streamlit.video(uploaded_video)
+# Step 2: Input for OpenAI API Key
+openai_api_key = streamlit.text_input("Enter your OpenAI API Key", type="password")
 
-    if streamlit.button("Replace Audio"):
-        # Save uploaded video to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video_file:
-            temp_video_file.write(uploaded_video.read())
-            video_path = temp_video_file.name
+if uploaded_credentials is not None and openai_api_key:
+    # Save the uploaded credentials to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_creds_file:
+        temp_creds_file.write(uploaded_credentials.read())
+        credentials_path = temp_creds_file.name
 
-        video = mp.VideoFileClip(video_path)
-        duration = video.duration
+    # Initialize Google Cloud clients with the uploaded credentials
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+    speech_client = speech.SpeechClient()
+    tts_client = texttospeech.TextToSpeechClient()
 
-        if duration > 30:  # Only split if the video is longer than 30 seconds
-            # Split the video into two halves
-            half_duration = duration / 2
+    # Upload video file
+    uploaded_video = streamlit.file_uploader("Upload Video", type=["mp4", "mov"])
+    if uploaded_video:
+        streamlit.video(uploaded_video)
 
-            # Process the first half
-            first_half = video.subclip(0, half_duration)
-            first_half_audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
-            first_half.audio.write_audiofile(first_half_audio_path)
+        if streamlit.button("Replace Audio"):
+            # Save uploaded video to a temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video_file:
+                temp_video_file.write(uploaded_video.read())
+                video_path = temp_video_file.name
 
-            first_transcription = transcribe_audio(first_half_audio_path)
-            streamlit.write("Transcription of first half:", first_transcription)
+            video = mp.VideoFileClip(video_path)
+            duration = video.duration
 
-            first_corrected_text = correct_text(first_transcription)
-            streamlit.write("Corrected Text of first half:", first_corrected_text)
+            if duration > 30:  # Only split if the video is longer than 30 seconds
+                # Split the video into two halves
+                half_duration = duration / 2
 
-            first_synthesized_audio = synthesize_speech(first_corrected_text)
+                # Process the first half
+                first_half = video.subclip(0, half_duration)
+                first_half_audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+                first_half.audio.write_audiofile(first_half_audio_path)
 
-            # Process the second half
-            second_half = video.subclip(half_duration, duration)
-            second_half_audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
-            second_half.audio.write_audiofile(second_half_audio_path)
+                first_transcription = transcribe_audio(first_half_audio_path)
+                streamlit.write("Transcription of first half:", first_transcription)
 
-            second_transcription = transcribe_audio(second_half_audio_path)
-            streamlit.write("Transcription of second half:", second_transcription)
+                first_corrected_text = correct_text(first_transcription, openai_api_key)
+                streamlit.write("Corrected Text of first half:", first_corrected_text)
 
-            second_corrected_text = correct_text(second_transcription)
-            streamlit.write("Corrected Text of second half:", second_corrected_text)
+                first_synthesized_audio = synthesize_speech(first_corrected_text)
 
-            second_synthesized_audio = synthesize_speech(second_corrected_text)
+                # Process the second half
+                second_half = video.subclip(half_duration, duration)
+                second_half_audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+                second_half.audio.write_audiofile(second_half_audio_path)
 
-            # Merge the two synthesized audios
-            final_audio = first_synthesized_audio + second_synthesized_audio
+                second_transcription = transcribe_audio(second_half_audio_path)
+                streamlit.write("Transcription of second half:", second_transcription)
 
-        else:
-            # Process the entire video if it's 30 seconds or shorter
-            audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
-            video.audio.write_audiofile(audio_path)
+                second_corrected_text = correct_text(second_transcription, openai_api_key)
+                streamlit.write("Corrected Text of second half:", second_corrected_text)
 
-            transcription = transcribe_audio(audio_path)
-            streamlit.write("Transcription of video:", transcription)
+                second_synthesized_audio = synthesize_speech(second_corrected_text)
 
-            corrected_text = correct_text(transcription)
-            streamlit.write("Corrected Text of video:", corrected_text)
+                # Merge the two synthesized audios
+                final_audio = first_synthesized_audio + second_synthesized_audio
 
-            final_audio = synthesize_speech(corrected_text)
+            else:
+                # Process the entire video if it's 30 seconds or shorter
+                audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+                video.audio.write_audiofile(audio_path)
 
-        # Replace audio in the original video with synthesized audio
-        final_video_path = replace_audio(video_path, final_audio)
+                transcription = transcribe_audio(audio_path)
+                streamlit.write("Transcription of video:", transcription)
 
-        streamlit.success("Audio replaced successfully!")
-        streamlit.video(final_video_path)
+                corrected_text = correct_text(transcription, openai_api_key)
+                streamlit.write("Corrected Text of video:", corrected_text)
 
-        # Clean up temporary files
-        os.remove(video_path)
+                final_audio = synthesize_speech(corrected_text)
 
-        if duration > 30:
-            if os.path.exists(first_half_audio_path):
-                os.remove(first_half_audio_path)
-            if os.path.exists(second_half_audio_path):
-                os.remove(second_half_audio_path)
+            # Replace audio in the original video with synthesized audio
+            final_video_path = replace_audio(video_path, final_audio)
 
-        if 'audio_path' in locals() and os.path.exists(audio_path):
-            os.remove(audio_path)  # Remove the audio path if used
+            streamlit.success("Audio replaced successfully!")
+            streamlit.video(final_video_path)
+
+            # Clean up temporary files
+            os.remove(video_path)
+
+            if duration > 30:
+                if os.path.exists(first_half_audio_path):
+                    os.remove(first_half_audio_path)
+                if os.path.exists(second_half_audio_path):
+                    os.remove(second_half_audio_path)
+
+            if 'audio_path' in locals() and os.path.exists(audio_path):
+                os.remove(audio_path)  # Remove the audio path if used
+else:
+    if uploaded_credentials is None:
+        streamlit.warning("Please upload Google Cloud JSON Credentials to proceed.")
+    if not openai_api_key:
+        streamlit.warning("Please enter your OpenAI API Key to proceed.")
