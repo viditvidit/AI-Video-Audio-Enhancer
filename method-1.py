@@ -117,7 +117,7 @@ else:
     streamlit.warning("Please upload the Google Cloud credentials file.")
 
 # OpenAI API key
-openai.api_key = streamlit.text_input("Enter your OpenAI API key")
+openai.api_key = streamlit.text_input("Enter your OpenAI API key", type="password")
 
 # Ensure both credentials and API key are provided
 if credentials_file is not None and openai.api_key:
