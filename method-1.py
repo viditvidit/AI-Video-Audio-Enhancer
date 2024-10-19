@@ -10,7 +10,7 @@ import tempfile
 
 #Google Cloud credentials and OpenAI API key
 #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/vidit/Downloads/clear-vision-438804-u6-9e0e3ffd8ef8.json"
-#openai.api_key = "22ec84421ec24230a3638d1b51e3a7dc"
+openai.api_key = "22ec84421ec24230a3638d1b51e3a7dc"
 
 
 # Step 1: Transcribe the original audio using Google Speech-to-Text
