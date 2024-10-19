@@ -7,7 +7,7 @@ from pydub import AudioSegment
 import requests  # For API calls
 import tempfile
 
-# Initialize Google Cloud clients
+#Initialize Google Cloud clients
 speech_client = speech.SpeechClient()
 tts_client = texttospeech.TextToSpeechClient()
 
