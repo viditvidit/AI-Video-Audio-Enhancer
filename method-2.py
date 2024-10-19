@@ -1,4 +1,3 @@
-pip install pydub
 import streamlit as st
 import moviepy.editor as mp
 import io
