@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit
 import moviepy.editor as mp
 import io
 import os
@@ -29,7 +29,7 @@ def correct_text(transcription):
     if response.status_code == 200:
         return response.json()["choices"][0]["message"]["content"]
     else:
-        st.error("Error in GPT-4o API request.")
+        streamlit.error("Error in GPT-4o API requestreamlit.")
         return transcription  # Return original transcription if error
 
 
@@ -95,15 +95,16 @@ def replace_audio(original_video_file, new_audio):
     return output_file
 
 # Streamlit UI
-st.title("Video Audio Replacement with AI Generated Voice (Sync Sentences)")
-st.subheader("This approach adjusts audio by syncing sentences by using markers")
+streamlit.title("Video Audio Enhancement with AI")
+streamlit.subheader("This approach adjusts audio by syncing sentences by using markers")
+streamlit.caption("Created by Vidit Kharecha")
 
 
-uploaded_video = st.file_uploader("Upload Video", type=["mp4", "mov"])
+uploaded_video = streamlit.file_uploader("Upload Video", type=["mp4", "mov"])
 if uploaded_video:
-    st.video(uploaded_video)
+    streamlit.video(uploaded_video)
 
-    if st.button("Replace Audio"):
+    if streamlit.button("Replace Audio"):
         # Save uploaded video to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video_file:
             temp_video_file.write(uploaded_video.read())
@@ -122,10 +123,10 @@ if uploaded_video:
             first_half.audio.write_audiofile(first_half_audio_path)
 
             first_transcription = transcribe_audio(first_half_audio_path)
-            st.write("Transcription of first half:", first_transcription)
+            streamlit.write("Transcription of first half:", first_transcription)
 
             first_corrected_text = correct_text(first_transcription)
-            st.write("Corrected Text of first half:", first_corrected_text)
+            streamlit.write("Corrected Text of first half:", first_corrected_text)
 
             first_synthesized_audio = synthesize_speech(first_corrected_text)
 
@@ -135,10 +136,10 @@ if uploaded_video:
             second_half.audio.write_audiofile(second_half_audio_path)
 
             second_transcription = transcribe_audio(second_half_audio_path)
-            st.write("Transcription of second half:", second_transcription)
+            streamlit.write("Transcription of second half:", second_transcription)
 
             second_corrected_text = correct_text(second_transcription)
-            st.write("Corrected Text of second half:", second_corrected_text)
+            streamlit.write("Corrected Text of second half:", second_corrected_text)
 
             second_synthesized_audio = synthesize_speech(second_corrected_text)
 
@@ -151,18 +152,18 @@ if uploaded_video:
             video.audio.write_audiofile(audio_path)
 
             transcription = transcribe_audio(audio_path)
-            st.write("Transcription of video:", transcription)
+            streamlit.write("Transcription of video:", transcription)
 
             corrected_text = correct_text(transcription)
-            st.write("Corrected Text of video:", corrected_text)
+            streamlit.write("Corrected Text of video:", corrected_text)
 
             final_audio = synthesize_speech(corrected_text)
 
         # Replace audio in the original video with synthesized audio
         final_video_path = replace_audio(video_path, final_audio)
 
-        st.success("Audio replaced successfully!")
-        st.video(final_video_path)
+        streamlit.success("Audio replaced successfully!")
+        streamlit.video(final_video_path)
 
         # Clean up temporary files
         os.remove(video_path)

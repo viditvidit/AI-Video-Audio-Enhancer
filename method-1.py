@@ -1,4 +1,4 @@
-
+import streamlit
 import pydub
 import moviepy.editor as mp
 from google.cloud import speech_v1p1beta1 as speech
@@ -50,7 +50,7 @@ def correct_text(transcription):
     if response.status_code == 200:
         return response.json()["choices"][0]["message"]["content"]
     else:
-        st.error(f"Error in GPT-4o API request: {response.status_code} - {response.text}")
+        streamlit.error(f"Error in GPT-4o API request: {response.status_code} - {response.text}")
         return transcription  # Return original transcription if error
 
 
@@ -98,10 +98,11 @@ def replace_audio(video_path, audio_path):
 
 
 # Streamlit UI for video processing
-st.title("Video Audio Enhancement with AI")
-st.subheader("This approach adjusts the output based on regenerated audio by trimming the video to match the new audio's duration")
+streamlit.title("Video Audio Enhancement with AI")
+streamlit.subheader("This approach adjusts the output based on regenerated audio by trimming the video to match the new audio's duration")
+streamlit.caption("Created by Vidit Kharecha")
 
-uploaded_file = st.file_uploader("Upload Video", type=["mp4", "mov"])
+uploaded_file = streamlit.file_uploader("Upload Video", type=["mp4", "mov"])
 
 if uploaded_file is not None:
     # Step 6: Save the uploaded video
@@ -128,10 +129,10 @@ if uploaded_file is not None:
         sound.export(first_half_audio_path, format="wav")  # Overwrite the original
 
         first_transcript = transcribe_audio(first_half_audio_path)
-        st.write("Transcription of first half:", first_transcript)
+        streamlit.write("Transcription of first half:", first_transcript)
 
         first_corrected_text = correct_text(first_transcript)
-        st.write("Corrected Text of first half:", first_corrected_text)
+        streamlit.write("Corrected Text of first half:", first_corrected_text)
 
         first_synthesized_audio = generate_audio(first_corrected_text)
 
@@ -149,10 +150,10 @@ if uploaded_file is not None:
         sound.export(second_half_audio_path, format="wav")  # Overwrite the original
 
         second_transcript = transcribe_audio(second_half_audio_path)
-        st.write("Transcription of second half:", second_transcript)
+        streamlit.write("Transcription of second half:", second_transcript)
 
         second_corrected_text = correct_text(second_transcript)
-        st.write("Corrected Text of second half:", second_corrected_text)
+        streamlit.write("Corrected Text of second half:", second_corrected_text)
 
         second_synthesized_audio = generate_audio(second_corrected_text)
 
@@ -177,10 +178,10 @@ if uploaded_file is not None:
         sound.export(audio_path, format="wav")  # Overwrite the original
 
         transcription = transcribe_audio(audio_path)
-        st.write("Transcription of video:", transcription)
+        streamlit.write("Transcription of video:", transcription)
 
         corrected_text = correct_text(transcription)
-        st.write("Corrected Text of video:", corrected_text)
+        streamlit.write("Corrected Text of video:", corrected_text)
 
         final_audio = generate_audio(corrected_text)
 
@@ -191,8 +192,8 @@ if uploaded_file is not None:
         final_video_path = replace_audio(trimmed_video_path, final_audio)
 
     # Step 7: Display the processed video
-    st.success("Video processed successfully!")
-    st.video(final_video_path)
+    streamlit.success("Video processed successfully!")
+    streamlit.video(final_video_path)
 
     # Step 8: Clean up temporary files
     try:
