@@ -10,21 +10,16 @@ import tempfile
 import json
 
 # Load Google credentials from Streamlit secrets
-google_credentials = {
-    "type": "service_account",
-    "project_id": streamlit.secrets["google"]["project_id"],
-    "private_key_id": streamlit.secrets["google"]["private_key_id"],
-    "private_key": streamlit.secrets["google"]["private_key"].replace("\n", "\\n"),  # Replace new lines
-    "client_email": streamlit.secrets["google"]["client_email"],
-    "client_id": streamlit.secrets["google"]["client_id"],
-    "auth_uri": streamlit.secrets["google"]["auth_uri"],
-    "token_uri": streamlit.secrets["google"]["token_uri"],
-    "auth_provider_x509_cert_url": streamlit.secrets["google"]["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": streamlit.secrets["google"]["client_x509_cert_url"],
-}
+# Ensure that your secrets contain a field named 'google_credentials' with the contents of your JSON file
+google_credentials = streamlit.secrets["google_credentials"]
 
-# Set the environment variable for Google credentials
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json.dumps(google_credentials)
+# Write the credentials to a temporary JSON file
+google_credentials_path = tempfile.NamedTemporaryFile(delete=False, suffix=".json").name
+with open(google_credentials_path, 'w') as json_file:
+    json.dump(google_credentials, json_file)
+
+# Set the environment variable for Google credentials to the temporary file path
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
 
 # Load OpenAI API key from Streamlit secrets
 openai.api_key = streamlit.secrets["openai"]["api_key"]
