@@ -10,13 +10,15 @@ import tempfile
 import json
 
 # Load Google credentials from Streamlit secrets
-# Ensure that your secrets contain a field named 'google_credentials' with the contents of your JSON file
 google_credentials = streamlit.secrets["google"]
+
+# Convert to a regular dictionary if it's an AttrDict
+google_credentials_dict = {k: v for k, v in google_credentials.items()}
 
 # Write the credentials to a temporary JSON file
 google_credentials_path = tempfile.NamedTemporaryFile(delete=False, suffix=".json").name
 with open(google_credentials_path, 'w') as json_file:
-    json.dump(google_credentials, json_file)
+    json.dump(google_credentials_dict, json_file)
 
 # Set the environment variable for Google credentials to the temporary file path
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
