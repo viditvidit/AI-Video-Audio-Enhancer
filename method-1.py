@@ -11,7 +11,7 @@ import json
 
 # Load Google credentials from Streamlit secrets
 # Ensure that your secrets contain a field named 'google_credentials' with the contents of your JSON file
-google_credentials = streamlit.secrets["google_credentials"]
+google_credentials = streamlit.secrets["google"]
 
 # Write the credentials to a temporary JSON file
 google_credentials_path = tempfile.NamedTemporaryFile(delete=False, suffix=".json").name
