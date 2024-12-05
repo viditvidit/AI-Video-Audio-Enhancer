@@ -1,7 +1,6 @@
-# The solutions make use of user input credentials for ease of use.
 Libraries Used: ``` streamlit, pydub, moviepy, google-cloud-speech, google-cloud-texttospeech, openai, requests ```
 
-## There are 2 solutions for this POC:
+## There are 2 solutions:
 
 ### Method 1: Syncing audio and video by trimming
 > Assumption: The user wants the regenerated audio in such a way that it if in case the audio duration is shorter than that of the video, it is trimmed and processed.
