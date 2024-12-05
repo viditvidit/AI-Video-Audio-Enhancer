@@ -1,6 +1,6 @@
 streamlit
+moviepy==2.0.0
 pydub
-ffmpeg-python
 google-cloud-speech
 google-cloud-texttospeech
 openai
