@@ -1,5 +1,6 @@
 streamlit
-moviepy==1.0.3
+ffmpeg
+moviepy
 pydub
 google-cloud-speech
 google-cloud-texttospeech
